@@ -1,21 +1,39 @@
-@host = http://localhost:3000/api/auth
+@host = http://localhost:4000/api/users
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcwMjE5NTc5MSwiZXhwIjoxNzAyMjM4OTkxfQ.LpFGtRmp-aiSXro4_XbnxeuZ6Y8okrHwqKXon2kmxsY
 
-### 회원가입
+### 회원가입(작동)
 POST {{host}}/signup
 Content-Type: application/json
 
 {
-   "email": "example2@example.com",
-   "password": "eXampLeP@ss",
-   "passwordConfirm": "eXampLeP@ss",
-   "name": "관리자"
+   "email": "example3@example.com",
+   "nickname": "관리자2",
+   "password": "123456",
+   "confirmpassword": "123456"
 }
 
-### 로그인
+### 로그인(작동)
 POST {{host}}/signin
 Content-Type: application/json
 
 {
    "email": "example2@example.com",
-   "password": "eXampLeP@ss"
+   "password": "123456"
+}
+
+### 내 정보조회(작동)
+GET {{host}}/auth/me
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+
+### 내정보 변경
+PUT {{host}}/auth/me
+Content-Type: application/json
+
+{
+   "email": "example2@example.com",
+   "password": "123456",
+   "nickname": "관리자",
+
 }

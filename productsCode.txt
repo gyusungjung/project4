@@ -1,0 +1,169 @@
+--------------------------------
+project4\src\app.js
+```
+import express from 'express';
+import router from './routers/index.js';
+import authMiddleware from './middlewares/need-signin.middleware.js';
+import ErrorHandlingMiddleware from './middlewares/error-handler.middleware.js';
+
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+const PORT = process.env.SERVER_PORT;
+
+app.use(authMiddleware);
+app.use(express.json());
+app.use('/api', router);
+app.use(ErrorHandlingMiddleware);
+
+app.listen(PORT, () => {
+  console.log(PORT, '포트로 서버가 열렸어요!');
+});
+
+```
+----------------------------
+project4\src\routers\index.js
+```
+import express from 'express';
+import ProductsRouter from './products.router.js';
+import UsersRouter from './users.router.js';
+
+const router = express.Router();
+
+//product
+router.use('/products/', ProductsRouter);
+
+//user
+router.use('/users', UsersRouter);
+
+export default router;
+
+```
+----------------------
+project4\src\routers\products.router.js
+```
+import express from 'express';
+import { ProductsController } from '../controllers/products.controller.js';
+
+const router = express.Router();
+const productsController = new ProductsController();
+
+// 상품 생성 API
+router.post(
+  '/',
+  (req, res, next) => {
+    console.log('Products GET route hit');
+    next();
+  },
+  productsController.createProduct,
+);
+// 상품 조회 API
+router.get('/', productsController.getProduct);
+
+export default router;
+
+```
+-------------------------------
+project4\src\controllers\products.controller.js
+
+```
+import { ProductsService } from '../services/products.service.js';
+
+/**products의 컨트롤러 역할 클래스 */
+export class ProductsController {
+  productsService = new ProductsService();
+
+  //게시글 조회API
+  getProduct = async (req, res, next) => {
+    try {
+      const products = await this.productsService.findAllProducts();
+      console.log("컨트롤러")
+      return res.status(200).json({ data: products });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  //게시글 생성API
+  createProduct = async (req, res, next) => {
+    try {
+      const { title, description } = req.body;
+      const CreatedProduct = await this.productsService.createProduct(
+        title,
+        description,
+      );
+      return res.status(201).json({ data: CreatedProduct });
+    } catch (err) {
+      next(err);
+    }
+  };
+}
+
+```
+------------------------
+project4\src\services\products.service.js
+```
+import { ProductsRepository } from '../repositories/products.repository.js';
+
+export class ProductsService {
+  productRepository = new ProductsRepository();
+  findAllProducts = async () => {
+    const products = await this.productRepository.findAllProducts();
+    console.log('서비스');
+    products.sort((a, b) => {
+      return b.createdAt - a.createdAt;
+    });
+
+    return products.map((product) => {
+      return {
+        productId: product.productId,
+        title: product.title,
+        description: product.description,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+      };
+    });
+  };
+
+  createProduct = async (title, description) => {
+    const createdProduct = await this.productRepository.createProduct(
+      title,
+      description,
+    );
+
+    return {
+      productId: createdProduct.productId,
+      title: createdProduct.title,
+      description: createdProduct.description,
+      createdAt: createdProduct.createdAt,
+      updatedAt: createdProduct.updatedAt,
+    };
+  };
+}
+
+```
+---------------------
+project4\src\repositories\products.repository.js
+```
+import { prisma } from '../utils/prisma/index.js';
+
+export class ProductsRepository {
+  findAllProducts = async () => {
+    const products = await prisma.products.findMany();
+    console.log('리파지토리');
+    return products;
+  };
+
+  createProduct = async (title, description) => {
+    const createdProduct = await prisma.products.create({
+      data: {
+        title,
+        description,
+      },
+    });
+    return createdProduct;
+  };
+}
+
+```
+
